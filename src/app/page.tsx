@@ -9,16 +9,21 @@ import {
   saveLocation,
   removeLocation,
   getSettings,
+  saveSettings,
   getCachedWeather,
   setCachedWeather,
+  clearCache,
 } from '@/lib/storage';
 import { seedDemoData } from '@/lib/demo-data';
+import { DashboardHeader } from '@/components/weather/dashboard-header';
 import { LocationSearch } from '@/components/weather/location-search';
 import { SavedLocations } from '@/components/weather/saved-locations';
 import { CurrentWeatherCard } from '@/components/weather/current-weather-card';
 import { HourlyForecastCard } from '@/components/weather/hourly-forecast';
 import { DailyForecastCard } from '@/components/weather/daily-forecast';
-import { Loader2 } from 'lucide-react';
+import { SkeletonCurrentWeather, SkeletonHourlyForecast, SkeletonCard } from '@/components/ui/skeleton';
+import { ErrorState, EmptyState } from '@/components/ui/error-state';
+import { CloudSun } from 'lucide-react';
 
 export default function Home() {
   const [savedLocations, setSavedLocations] = useLocalStorage<SavedLocation[]>(
@@ -29,7 +34,9 @@ export default function Home() {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [settings] = useLocalStorage<UserSettings>('weather-app-settings', { temperatureUnit: 'celsius' });
+  const [settings, setSettings] = useLocalStorage<UserSettings>('weather-app-settings', {
+    temperatureUnit: 'celsius',
+  });
 
   // Seed demo data on first load
   useEffect(() => {
@@ -91,6 +98,7 @@ export default function Home() {
     const updated = getSavedLocations();
     setSavedLocations(updated);
     setCurrentLocation(savedLocation);
+    setWeatherData(null); // Clear old data while loading
   };
 
   const handleLocationRemove = (locationId: string) => {
@@ -105,41 +113,72 @@ export default function Home() {
     }
   };
 
+  const handleUnitChange = (unit: 'celsius' | 'fahrenheit') => {
+    setSettings({ temperatureUnit: unit });
+    saveSettings({ temperatureUnit: unit });
+    // Clear cache so data is refetched with new unit
+    clearCache();
+    // Trigger reload
+    if (currentLocation) {
+      setWeatherData(null);
+      setCurrentLocation({ ...currentLocation });
+    }
+  };
+
+  const handleRetry = () => {
+    if (currentLocation) {
+      clearCache();
+      setCurrentLocation({ ...currentLocation });
+    }
+  };
+
   return (
-    <main className="min-h-screen bg-zinc-50 dark:bg-black">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main className="min-h-screen bg-gradient-to-br from-zinc-50 via-zinc-50 to-blue-50 dark:from-black dark:via-zinc-950 dark:to-blue-950">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Dashboard Header */}
+        <DashboardHeader unit={settings.temperatureUnit} onUnitChange={handleUnitChange} />
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
             <div>
-              <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-3">
+              <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-3">
                 Search Location
               </h2>
               <LocationSearch onLocationSelect={handleLocationSelect} />
             </div>
 
-            <SavedLocations
-              locations={savedLocations}
-              currentLocationId={currentLocation?.id || null}
-              onLocationSelect={setCurrentLocation}
-              onLocationRemove={handleLocationRemove}
-            />
+            {savedLocations.length > 0 && (
+              <SavedLocations
+                locations={savedLocations}
+                currentLocationId={currentLocation?.id || null}
+                onLocationSelect={setCurrentLocation}
+                onLocationRemove={handleLocationRemove}
+              />
+            )}
           </div>
 
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Loading State */}
             {isLoading && (
-              <div className="flex items-center justify-center py-20">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-              </div>
+              <>
+                <SkeletonCurrentWeather />
+                <SkeletonHourlyForecast />
+                <SkeletonCard />
+              </>
             )}
 
-            {error && (
-              <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-900 dark:text-red-100">
-                {error}
-              </div>
+            {/* Error State */}
+            {!isLoading && error && (
+              <ErrorState
+                title="Unable to load weather data"
+                message={error}
+                onRetry={handleRetry}
+              />
             )}
 
+            {/* Weather Data */}
             {!isLoading && !error && currentLocation && weatherData && (
               <>
                 <CurrentWeatherCard
@@ -160,10 +199,21 @@ export default function Home() {
               </>
             )}
 
-            {!isLoading && !error && !currentLocation && (
-              <div className="text-center py-20 text-zinc-500 dark:text-zinc-400">
-                <p className="text-lg">Search for a location to get started</p>
-              </div>
+            {/* Empty State */}
+            {!isLoading && !error && !currentLocation && savedLocations.length === 0 && (
+              <EmptyState
+                title="Welcome to Weather Dashboard"
+                description="Search for a city above to get started with real-time weather forecasts and conditions."
+                icon={<CloudSun className="w-full h-full" />}
+              />
+            )}
+
+            {!isLoading && !error && !currentLocation && savedLocations.length > 0 && (
+              <EmptyState
+                title="Select a location"
+                description="Choose one of your saved locations or search for a new city to view weather data."
+                icon={<CloudSun className="w-full h-full" />}
+              />
             )}
           </div>
         </div>

@@ -8,7 +8,7 @@ import {
   formatHumidity,
   formatPrecipitation,
 } from '@/lib/format';
-import { Wind, Droplets, Thermometer } from 'lucide-react';
+import { Wind, Droplets, Thermometer, CloudRain } from 'lucide-react';
 
 interface CurrentWeatherCardProps {
   weather: CurrentWeather;
@@ -22,47 +22,64 @@ export function CurrentWeatherCard({
   unit,
 }: CurrentWeatherCardProps) {
   return (
-    <Card className="bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-800 border-none text-white">
-      <CardContent className="py-8">
+    <Card className="bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 dark:from-blue-600 dark:via-blue-700 dark:to-indigo-800 border-none text-white shadow-lg">
+      <CardContent className="py-8 px-6">
         <div className="text-center">
-          <h1 className="text-3xl font-bold mb-2">{locationName}</h1>
-          <div className="text-7xl my-4">{getWeatherIcon(weather.weatherCode)}</div>
-          <div className="text-6xl font-bold mb-2">
-            {formatTemperature(weather.temperature, unit)}
-          </div>
-          <p className="text-xl opacity-90 mb-6">
-            {getWeatherDescription(weather.weatherCode)}
-          </p>
+          {/* Location */}
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4 tracking-tight">
+            {locationName}
+          </h2>
 
-          <div className="grid grid-cols-3 gap-4 mt-6 max-w-md mx-auto">
-            <div className="flex flex-col items-center">
-              <Thermometer className="w-5 h-5 mb-1 opacity-80" />
-              <div className="text-sm opacity-80">Feels like</div>
-              <div className="font-semibold">
+          {/* Main temperature and condition */}
+          <div className="mb-6">
+            <div className="text-7xl sm:text-8xl my-6 drop-shadow-md">
+              {getWeatherIcon(weather.weatherCode)}
+            </div>
+            <div className="text-6xl sm:text-7xl font-bold mb-3 tracking-tight drop-shadow-md">
+              {formatTemperature(weather.temperature, unit)}
+            </div>
+            <p className="text-xl sm:text-2xl opacity-95 font-medium">
+              {getWeatherDescription(weather.weatherCode)}
+            </p>
+          </div>
+
+          {/* Weather details grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 max-w-2xl mx-auto">
+            <div className="flex flex-col items-center bg-white/10 backdrop-blur-sm rounded-lg p-4">
+              <Thermometer className="w-5 h-5 mb-2 opacity-90" aria-hidden="true" />
+              <div className="text-xs sm:text-sm opacity-90 mb-1">Feels like</div>
+              <div className="font-semibold text-lg">
                 {formatTemperature(weather.apparentTemperature, unit)}
               </div>
             </div>
 
-            <div className="flex flex-col items-center">
-              <Wind className="w-5 h-5 mb-1 opacity-80" />
-              <div className="text-sm opacity-80">Wind</div>
-              <div className="font-semibold">
-                {formatWindSpeed(weather.windSpeed)} {formatWindDirection(weather.windDirection)}
+            <div className="flex flex-col items-center bg-white/10 backdrop-blur-sm rounded-lg p-4">
+              <Wind className="w-5 h-5 mb-2 opacity-90" aria-hidden="true" />
+              <div className="text-xs sm:text-sm opacity-90 mb-1">Wind</div>
+              <div className="font-semibold text-base sm:text-lg">
+                {formatWindSpeed(weather.windSpeed)}
+              </div>
+              <div className="text-xs opacity-80">
+                {formatWindDirection(weather.windDirection)}
               </div>
             </div>
 
-            <div className="flex flex-col items-center">
-              <Droplets className="w-5 h-5 mb-1 opacity-80" />
-              <div className="text-sm opacity-80">Humidity</div>
-              <div className="font-semibold">{formatHumidity(weather.humidity)}</div>
+            <div className="flex flex-col items-center bg-white/10 backdrop-blur-sm rounded-lg p-4">
+              <Droplets className="w-5 h-5 mb-2 opacity-90" aria-hidden="true" />
+              <div className="text-xs sm:text-sm opacity-90 mb-1">Humidity</div>
+              <div className="font-semibold text-lg">
+                {formatHumidity(weather.humidity)}
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center bg-white/10 backdrop-blur-sm rounded-lg p-4">
+              <CloudRain className="w-5 h-5 mb-2 opacity-90" aria-hidden="true" />
+              <div className="text-xs sm:text-sm opacity-90 mb-1">Precipitation</div>
+              <div className="font-semibold text-lg">
+                {formatPrecipitation(weather.precipitation)}
+              </div>
             </div>
           </div>
-
-          {weather.precipitation > 0 && (
-            <div className="mt-4 text-sm opacity-90">
-              Precipitation: {formatPrecipitation(weather.precipitation)}
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>
