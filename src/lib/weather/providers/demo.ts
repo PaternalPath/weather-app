@@ -96,7 +96,13 @@ function generateHourlyForecast(baseTemp: number, weatherCode: number): WeatherD
     humidity.push(Math.round(65 - tempVariation * 2));
   }
 
-  return { time: times, temperature: temperatures, weatherCode: weatherCodes, precipitation, humidity };
+  return {
+    time: times,
+    temperature: temperatures,
+    weatherCode: weatherCodes,
+    precipitation,
+    humidity,
+  };
 }
 
 function generateDailyForecast(
@@ -128,7 +134,9 @@ function generateDailyForecast(
 
     // Precipitation
     precipitationSum.push(weatherCode >= 60 ? Math.round((5 - i) * 2) : 0);
-    precipitationProbability.push(weatherCode >= 60 ? Math.max(10, 70 - i * 10) : Math.max(0, 20 - i * 3));
+    precipitationProbability.push(
+      weatherCode >= 60 ? Math.max(10, 70 - i * 10) : Math.max(0, 20 - i * 3)
+    );
   }
 
   return {
@@ -153,7 +161,8 @@ export class DemoProvider implements WeatherProvider {
     const locationKey = getLocationKey(lat, lon);
     const locationData = DEMO_LOCATIONS[locationKey] || DEFAULT_DATA;
 
-    const baseTemp = unit === 'fahrenheit' ? locationData.baseTemp.fahrenheit : locationData.baseTemp.celsius;
+    const baseTemp =
+      unit === 'fahrenheit' ? locationData.baseTemp.fahrenheit : locationData.baseTemp.celsius;
 
     const now = new Date();
 

@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { WeatherRequestSchema, type WeatherResponse, type WeatherError } from '@/lib/weather/schemas';
+import {
+  WeatherRequestSchema,
+  type WeatherResponse,
+  type WeatherError,
+} from '@/lib/weather/schemas';
 import { openMeteoProvider } from '@/lib/weather/providers/open-meteo';
 import { demoProvider } from '@/lib/weather/providers/demo';
 import { WeatherProviderError } from '@/lib/weather/provider';
@@ -87,16 +91,13 @@ export async function GET(request: NextRequest): Promise<NextResponse<WeatherRes
   const cachedData = getFromCache(cacheKey);
 
   if (cachedData) {
-    return NextResponse.json(
-      { success: true, data: cachedData } as WeatherResponse,
-      {
-        headers: {
-          'X-Cache': 'HIT',
-          'X-RateLimit-Remaining': rateLimit.remaining.toString(),
-          'Cache-Control': 'public, max-age=60',
-        },
-      }
-    );
+    return NextResponse.json({ success: true, data: cachedData } as WeatherResponse, {
+      headers: {
+        'X-Cache': 'HIT',
+        'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+        'Cache-Control': 'public, max-age=60',
+      },
+    });
   }
 
   // Select provider
@@ -113,17 +114,14 @@ export async function GET(request: NextRequest): Promise<NextResponse<WeatherRes
     // Cache the result
     setInCache(cacheKey, data);
 
-    return NextResponse.json(
-      { success: true, data } as WeatherResponse,
-      {
-        headers: {
-          'X-Cache': 'MISS',
-          'X-Provider': provider.name,
-          'X-RateLimit-Remaining': rateLimit.remaining.toString(),
-          'Cache-Control': 'public, max-age=60',
-        },
-      }
-    );
+    return NextResponse.json({ success: true, data } as WeatherResponse, {
+      headers: {
+        'X-Cache': 'MISS',
+        'X-Provider': provider.name,
+        'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+        'Cache-Control': 'public, max-age=60',
+      },
+    });
   } catch (error) {
     if (error instanceof WeatherProviderError) {
       const status = error.code === 'RATE_LIMITED' ? 429 : error.code === 'TIMEOUT' ? 504 : 502;

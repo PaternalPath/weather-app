@@ -176,13 +176,15 @@ export function LocationSearch({ onLocationSelect }: LocationSearchProps) {
           onChange={(e) => setQuery(e.target.value)}
           onFocus={handleFocus}
           onKeyDown={handleKeyDown}
-          className="pl-10 pr-10"
+          className="pr-10 pl-10"
           role="combobox"
           aria-expanded={showDropdown}
           aria-haspopup="listbox"
           aria-controls="location-results"
           aria-autocomplete="list"
-          aria-activedescendant={selectedIndex >= 0 ? `location-option-${selectedIndex}` : undefined}
+          aria-activedescendant={
+            selectedIndex >= 0 ? `location-option-${selectedIndex}` : undefined
+          }
         />
         {query && (
           <button
