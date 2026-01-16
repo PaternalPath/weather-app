@@ -1,46 +1,31 @@
 # Weather Dashboard
 
-A modern, responsive weather dashboard built with Next.js 16, TypeScript, and Tailwind CSS. Get accurate weather forecasts and current conditions powered by the Open-Meteo API.
+A modern, production-ready weather dashboard built with Next.js 16, TypeScript, and Tailwind CSS.
 
-![Weather Dashboard](https://img.shields.io/badge/Next.js-16.1.1-black?style=flat-square&logo=next.js)
+<!-- TODO: Add screenshot/GIF here when available -->
+<!-- ![Weather Dashboard Screenshot](./docs/screenshot.png) -->
+
+[![CI](https://github.com/YOUR_USERNAME/weather-app/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/weather-app/actions/workflows/ci.yml)
+![Next.js](https://img.shields.io/badge/Next.js-16.1.1-black?style=flat-square&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38B2AC?style=flat-square&logo=tailwind-css)
 
 ## Features
 
-### Weather Data
-- **Live Weather Data**: Current conditions, hourly forecasts (24h), and 7-day forecasts
-- **Location Search**: Search and save multiple cities worldwide using geocoding
-- **Smart Caching**: 10-minute localStorage cache to reduce API calls and improve performance
-- **Demo Ready**: Pre-seeded with 3 example cities (London, New York, Tokyo)
-- **Privacy First**: No API keys required, all data stored locally
-
-### UI/UX
-- **Modern Design**: Beautiful gradient cards with glassmorphism effects
-- **Temperature Toggle**: Quick switch between Celsius and Fahrenheit in dashboard header
-- **Responsive Layout**: Mobile-first design, works perfectly on 375px+ screens
-- **Loading States**: Skeleton loaders for smooth loading experience
-- **Error Handling**: User-friendly error messages with retry functionality
-- **Empty States**: Helpful guidance when no location is selected
-- **Smooth Animations**: Polished transitions and hover effects
-- **Dark Mode**: Full dark mode support with automatic theme detection
-- **Accessibility**: WCAG compliant with proper ARIA labels, focus states, and keyboard navigation
+- **Real-time Weather** - Current conditions, 24-hour hourly, and 7-day forecasts
+- **Server-side API** - Weather data fetched via `/api/weather` route with caching and rate limiting
+- **Demo Mode** - Works without any API keys using deterministic demo data
+- **Mobile-first Design** - Responsive layout optimized for all screen sizes
+- **Accessibility** - Full keyboard navigation, ARIA labels, screen reader support
+- **Dark Mode** - Automatic theme detection with manual toggle
 
 ## Quick Start
 
-### Prerequisites
-
-- Node.js 18+ and npm
-
-### Installation
-
 ```bash
-# Clone the repository
+# Clone and install
 git clone <your-repo-url>
 cd weather-app
-
-# Install dependencies
-npm install
+npm ci
 
 # Run development server
 npm run dev
@@ -48,87 +33,134 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) to view the dashboard.
 
-### Build for Production
+## Scripts
+
+| Script              | Description                  |
+| ------------------- | ---------------------------- |
+| `npm run dev`       | Start development server     |
+| `npm run build`     | Create production build      |
+| `npm start`         | Start production server      |
+| `npm run lint`      | Run ESLint                   |
+| `npm run typecheck` | Run TypeScript type checking |
+| `npm test`          | Run unit tests (Vitest)      |
+| `npm run test:e2e`  | Run E2E tests (Playwright)   |
+| `npm run format`    | Format code with Prettier    |
+
+## Demo Mode
+
+The app works out-of-the-box without any API keys. By default, it uses [Open-Meteo](https://open-meteo.com/), a free weather API.
+
+For testing or demos, set `WEATHER_API_MODE=demo` to use deterministic demo data:
 
 ```bash
-# Create optimized production build
-npm run build
-
-# Start production server
-npm start
+# .env.local
+WEATHER_API_MODE=demo
 ```
 
-### Scripts
+Demo mode provides stable data for 5 cities: London, New York, Tokyo, Paris, Sydney.
 
-- `npm run dev` - Start development server with hot reload
-- `npm run build` - Create production build
-- `npm start` - Start production server
-- `npm run lint` - Run ESLint to check code quality
+## Environment Variables
 
-## Open-Meteo API
+| Variable           | Required | Default | Description                               |
+| ------------------ | -------- | ------- | ----------------------------------------- |
+| `WEATHER_API_MODE` | No       | (none)  | Set to `demo` for deterministic demo data |
 
-This application uses the [Open-Meteo API](https://open-meteo.com/), a free weather API that doesn't require authentication.
+**Note:** No API keys are required. Open-Meteo is free and keyless.
 
-### API Endpoints Used
+## Architecture
 
-1. **Geocoding API**: Search for locations by city name
-   - Endpoint: `https://geocoding-api.open-meteo.com/v1/search`
-   - Returns: City name, coordinates, country, and administrative region
+```
+User → UI → /api/weather → Provider → Response
+                 ↓
+            Cache (5-min TTL)
+            Rate Limit (30 req/min)
+```
 
-2. **Forecast API**: Get weather data for specific coordinates
-   - Endpoint: `https://api.open-meteo.com/v1/forecast`
-   - Returns: Current weather, hourly forecasts, and daily forecasts
+The frontend calls `/api/weather` which:
 
-### Features from Open-Meteo
+1. Validates request with Zod schemas
+2. Checks in-memory cache (5-minute TTL)
+3. Applies rate limiting (30 requests/minute per IP)
+4. Fetches from provider (Open-Meteo or Demo)
+5. Returns structured JSON response
 
-- Current temperature and weather conditions
-- Feels-like temperature
-- Wind speed and direction
-- Humidity levels
-- Precipitation data
-- Weather codes with descriptions
-- Hourly forecasts for the next 24 hours
-- 7-day daily forecasts with min/max temperatures
-
-## Deploy to Vercel
-
-The easiest way to deploy your Weather Dashboard is using the Vercel Platform.
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
-
-### Deployment Steps
-
-1. Push your code to a Git repository (GitHub, GitLab, or Bitbucket)
-2. Import your repository to Vercel
-3. Vercel will automatically detect Next.js and configure build settings
-4. Click "Deploy"
-
-Your dashboard will be live in under a minute!
-
-### Environment Variables
-
-No environment variables are required. The app uses Open-Meteo's free API which doesn't need authentication.
+See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for detailed architecture documentation.
 
 ## Project Structure
 
 ```
 weather-app/
 ├── src/
-│   ├── app/                    # Next.js App Router pages
-│   │   ├── layout.tsx          # Root layout with navigation
-│   │   ├── page.tsx            # Dashboard page
-│   │   └── settings/           # Settings page
-│   ├── components/             # React components
-│   │   ├── layout/             # Layout components (navigation)
-│   │   ├── ui/                 # Reusable UI components
-│   │   └── weather/            # Weather-specific components
-│   ├── hooks/                  # Custom React hooks
-│   ├── lib/                    # Utility functions
-│   ├── services/               # API services
-│   └── types/                  # TypeScript type definitions
-├── docs/                       # Documentation
-│   └── ARCHITECTURE.md         # Architecture documentation
-└── public/                     # Static assets
+│   ├── app/
+│   │   ├── api/weather/      # Server API route
+│   │   ├── page.tsx          # Dashboard
+│   │   └── settings/         # Settings page
+│   ├── components/
+│   │   ├── ui/               # Base components (Button, Card, Input)
+│   │   └── weather/          # Weather components
+│   ├── lib/
+│   │   └── weather/          # Provider pattern + cache + schemas
+│   ├── services/             # Client API calls
+│   └── types/                # TypeScript types
+├── e2e/                      # Playwright E2E tests
+├── docs/                     # Documentation
+└── .github/workflows/        # CI/CD
+```
+
+## Testing
+
+```bash
+# Unit tests (Vitest)
+npm test
+
+# E2E tests (Playwright)
+npm run test:e2e
+
+# E2E with UI
+npm run test:e2e:ui
+```
+
+Test coverage:
+
+- **32 unit tests** - Zod schemas, demo provider, cache behavior
+- **13 E2E tests** - UI flows, API routes, accessibility
+
+## Deploy to Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
+
+### Vercel Configuration
+
+| Setting          | Value           |
+| ---------------- | --------------- |
+| Framework Preset | Next.js         |
+| Build Command    | `npm run build` |
+| Output Directory | `.next`         |
+| Install Command  | `npm ci`        |
+| Node.js Version  | 20.x            |
+
+### Environment Variables (Vercel)
+
+No environment variables required for production. Optionally set:
+
+- `WEATHER_API_MODE=demo` for demo mode
+
+### Deployment Steps
+
+1. Push code to GitHub
+2. Import repository in Vercel
+3. Deploy (auto-detected as Next.js)
+
+## Local Development Checklist
+
+Verify everything works:
+
+```bash
+npm ci              # Install dependencies
+npm run lint        # ✓ No errors
+npm run typecheck   # ✓ No errors
+npm test            # ✓ 32 tests pass
+npm run build       # ✓ Build succeeds
 ```
 
 ## Technology Stack
@@ -136,74 +168,26 @@ weather-app/
 - **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript 5
 - **Styling**: Tailwind CSS 4
-- **Icons**: Lucide React
-- **Date Handling**: date-fns
 - **Validation**: Zod
-- **Deployment**: Vercel-ready
-
-## UI Components
-
-The dashboard includes a comprehensive set of reusable UI components:
-
-### Base Components
-- **Card**: Elevated cards with hover effects and rounded corners
-- **Button**: Multiple variants (primary, secondary, danger, ghost) with proper focus states
-- **Input**: Form inputs with error states and accessibility features
-- **Toggle**: Segmented control for switching between options (used for temperature units)
-
-### Specialized Components
-- **Skeleton**: Loading placeholders for weather cards and lists
-- **Stat**: Metric display with icon, label, and value
-- **ErrorState**: User-friendly error messages with retry functionality
-- **EmptyState**: Helpful guidance when no data is available
-
-### Weather Components
-- **DashboardHeader**: Page header with temperature unit toggle
-- **CurrentWeatherCard**: Hero card showing current conditions with gradient background
-- **HourlyForecastCard**: Horizontal scrolling 24-hour forecast with fade edges
-- **DailyForecastCard**: 7-day forecast list with precipitation probability
-- **LocationSearch**: Autocomplete search with debouncing
-- **SavedLocations**: Manage and switch between saved cities
-
-All components are:
-- ✅ Fully typed with TypeScript
-- ✅ Accessible (ARIA labels, keyboard navigation)
-- ✅ Responsive (mobile-first design)
-- ✅ Dark mode compatible
-- ✅ Properly focused (visible focus indicators)
-
-## Data Storage & Privacy
-
-All data is stored locally in your browser using localStorage:
-
-- **Saved Locations**: Your favorite cities are saved in your browser
-- **Settings**: Temperature unit preference stored locally
-- **Weather Cache**: 10-minute cache to reduce API calls
-- **No Tracking**: No analytics, no cookies, no external tracking
-- **No Backend**: All data stays on your device
-
-## Browser Support
-
-- Chrome/Edge (latest)
-- Firefox (latest)
-- Safari (latest)
-- Mobile browsers (iOS Safari, Chrome Mobile)
+- **Testing**: Vitest + Playwright
+- **Icons**: Lucide React
+- **CI/CD**: GitHub Actions
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run `npm run lint && npm run typecheck && npm test`
+5. Submit a pull request
 
 ## License
 
-MIT License - feel free to use this project for personal or commercial purposes.
+MIT License - see [LICENSE](./LICENSE) for details.
 
 ## Acknowledgments
 
-- Weather data provided by [Open-Meteo](https://open-meteo.com/)
+- Weather data by [Open-Meteo](https://open-meteo.com/)
 - Built with [Next.js](https://nextjs.org/)
 - Styled with [Tailwind CSS](https://tailwindcss.com/)
 - Icons from [Lucide](https://lucide.dev/)
-
----
-
-**Note**: This is a demo application. Weather data accuracy depends on the Open-Meteo API service.

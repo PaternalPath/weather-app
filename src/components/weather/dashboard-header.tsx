@@ -8,12 +8,12 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ unit, onUnitChange }: DashboardHeaderProps) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-100">
+        <h1 className="text-2xl font-bold text-zinc-900 sm:text-3xl dark:text-zinc-100">
           Weather Dashboard
         </h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
+        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
           Real-time weather data powered by Open-Meteo
         </p>
       </div>

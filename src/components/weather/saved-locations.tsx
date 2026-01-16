@@ -30,28 +30,28 @@ export function SavedLocations({
           {locations.map((location) => (
             <div
               key={location.id}
-              className={`
-                flex items-center justify-between p-3 rounded-lg border transition-colors
-                ${currentLocationId === location.id
-                  ? 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800'
-                  : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'
-                }
-              `}
+              className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${
+                currentLocationId === location.id
+                  ? 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950'
+                  : 'border-zinc-200 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-800'
+              } `}
             >
               <button
                 onClick={() => onLocationSelect(location)}
-                className="flex items-center gap-3 flex-1 text-left"
+                className="flex flex-1 items-center gap-3 text-left"
               >
-                <MapPin className={`w-4 h-4 flex-shrink-0 ${
-                  currentLocationId === location.id
-                    ? 'text-blue-600 dark:text-blue-400'
-                    : 'text-zinc-400'
-                }`} />
-                <div className="flex-1 min-w-0">
+                <MapPin
+                  className={`h-4 w-4 flex-shrink-0 ${
+                    currentLocationId === location.id
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-zinc-400'
+                  }`}
+                />
+                <div className="min-w-0 flex-1">
                   <div className="font-medium text-zinc-900 dark:text-zinc-100">
                     {location.name}
                   </div>
-                  <div className="text-sm text-zinc-500 dark:text-zinc-400 truncate">
+                  <div className="truncate text-sm text-zinc-500 dark:text-zinc-400">
                     {[location.admin1, location.country].filter(Boolean).join(', ')}
                   </div>
                 </div>
@@ -67,7 +67,7 @@ export function SavedLocations({
                 className="ml-2"
                 aria-label={`Remove ${location.name}`}
               >
-                <X className="w-4 h-4" />
+                <X className="h-4 w-4" />
               </Button>
             </div>
           ))}

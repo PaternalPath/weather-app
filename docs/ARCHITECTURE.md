@@ -2,437 +2,329 @@
 
 ## Overview
 
-The Weather Dashboard is built using modern web technologies with a focus on performance, maintainability, and user experience. This document outlines the architectural decisions, data flow, and component structure.
+Weather Dashboard is a production-ready weather application built with Next.js 16 (App Router), TypeScript, and Tailwind CSS. This document describes the system architecture, data flow, and key design decisions.
 
 ## Tech Stack
 
-### Core Technologies
+| Category   | Technology                       |
+| ---------- | -------------------------------- |
+| Framework  | Next.js 16 (App Router)          |
+| Language   | TypeScript 5                     |
+| Styling    | Tailwind CSS 4                   |
+| Validation | Zod                              |
+| Testing    | Vitest (unit) + Playwright (E2E) |
+| Icons      | Lucide React                     |
+| Dates      | date-fns                         |
 
-- **Next.js 16**: React framework with App Router for server-side rendering and static generation
-- **TypeScript 5**: Type-safe development with full IntelliSense support
-- **Tailwind CSS 4**: Utility-first CSS framework for rapid UI development
-- **React 19**: Latest React with improved hooks and performance
-
-### Supporting Libraries
-
-- **Lucide React**: Modern icon library with tree-shaking support
-- **date-fns**: Lightweight date manipulation and formatting
-- **Zod**: Runtime type validation for API responses
-
-## Architecture Patterns
-
-### 1. Component Architecture
-
-The application follows a layered component architecture:
+## System Architecture
 
 ```
-Components (Presentation)
-    ↓
-Hooks (Logic & State)
-    ↓
-Services (Data Fetching)
-    ↓
-Storage (Persistence)
+┌─────────────────────────────────────────────────────────────────┐
+│                          Browser                                 │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐      │
+│  │   UI Layer   │ -> │   Services   │ -> │ localStorage │      │
+│  │  (React)     │    │  (fetch)     │    │   (cache)    │      │
+│  └──────────────┘    └──────────────┘    └──────────────┘      │
+└────────────────────────────│────────────────────────────────────┘
+                             │ HTTP GET /api/weather
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Next.js Server (Edge)                         │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                   API Route Handler                       │  │
+│  │  ┌──────────┐   ┌──────────┐   ┌──────────┐             │  │
+│  │  │  Zod     │ ->│  Cache   │ ->│   Rate   │             │  │
+│  │  │ Validate │   │  Check   │   │  Limit   │             │  │
+│  │  └──────────┘   └──────────┘   └──────────┘             │  │
+│  │                       │                                   │  │
+│  │                       ▼                                   │  │
+│  │  ┌──────────────────────────────────────────────────┐   │  │
+│  │  │              Provider Adapter                      │   │  │
+│  │  │  ┌────────────────┐    ┌────────────────┐        │   │  │
+│  │  │  │  Open-Meteo    │ or │     Demo       │        │   │  │
+│  │  │  │   Provider     │    │   Provider     │        │   │  │
+│  │  │  └────────────────┘    └────────────────┘        │   │  │
+│  │  └──────────────────────────────────────────────────┘   │  │
+│  └──────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+                             │
+                             ▼ (if using Open-Meteo)
+┌─────────────────────────────────────────────────────────────────┐
+│                    Open-Meteo API                                │
+│  • Geocoding: https://geocoding-api.open-meteo.com/v1/search    │
+│  • Forecast:  https://api.open-meteo.com/v1/forecast            │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-#### Component Layers
+## Data Flow
 
-1. **UI Components** (`/components/ui`)
-   - Pure presentational components
-   - Reusable across the application
-   - No business logic
-   - Examples: Button, Card, Input
-
-2. **Feature Components** (`/components/weather`, `/components/layout`)
-   - Domain-specific components
-   - Contain presentation logic
-   - Consume hooks and services
-   - Examples: CurrentWeatherCard, LocationSearch
-
-3. **Page Components** (`/app`)
-   - Top-level route components
-   - Orchestrate feature components
-   - Manage page-level state
-   - Examples: Dashboard, Settings
-
-### 2. Data Flow
+### Weather Request Flow
 
 ```
-User Action
-    ↓
-Component Event Handler
-    ↓
-Custom Hook / State Update
-    ↓
-Service Layer (API Call)
-    ↓
-Cache Check (localStorage)
-    ↓
-External API (Open-Meteo)
-    ↓
-Update State
-    ↓
-Re-render Components
+User selects location
+        │
+        ▼
+UI calls fetchWeather(lat, lon, unit)
+        │
+        ▼
+Service sends GET /api/weather?lat=X&lon=Y&unit=Z
+        │
+        ▼
+API Route: Validate with Zod
+        │
+        ├── Invalid → 400 { success: false, error: {...} }
+        │
+        ▼ (valid)
+Check rate limit (30 req/min per IP)
+        │
+        ├── Exceeded → 429 { success: false, error: {...} }
+        │
+        ▼ (allowed)
+Check server cache (5-min TTL)
+        │
+        ├── Cache HIT → Return cached data
+        │
+        ▼ (cache MISS)
+Select provider (Open-Meteo or Demo)
+        │
+        ▼
+Fetch from provider (10s timeout)
+        │
+        ├── Error → 502/504 { success: false, error: {...} }
+        │
+        ▼ (success)
+Cache response, return to client
+        │
+        ▼
+UI displays weather data
 ```
 
-### 3. State Management
+### Location Search Flow
 
-The application uses a hybrid state management approach:
+```
+User types in search box
+        │
+        ▼
+Debounce (300ms)
+        │
+        ▼
+Client calls Open-Meteo Geocoding API directly
+        │
+        ▼
+Display search results
+        │
+        ▼
+User selects location → Save to localStorage
+```
 
-#### Local State (useState)
-- Component-specific UI state
-- Form inputs
-- Modal visibility
+## Key Components
 
-#### localStorage State (useLocalStorage hook)
-- Saved locations
-- User settings
-- Weather data cache
+### API Route (`/api/weather`)
 
-#### Advantages
-- No external state management library needed
-- Persistent across browser sessions
-- Simple and performant
+The server-side API route handles all weather data requests:
+
+| Feature        | Implementation                    |
+| -------------- | --------------------------------- |
+| Validation     | Zod schemas for request/response  |
+| Caching        | In-memory Map with 5-min TTL      |
+| Rate Limiting  | IP-based, 30 requests/minute      |
+| Timeout        | 10 second abort on provider calls |
+| Error Handling | Structured JSON errors with codes |
+
+### Provider Pattern
+
+```typescript
+interface WeatherProvider {
+  name: string;
+  fetchWeather(options: WeatherProviderOptions): Promise<WeatherData>;
+}
+```
+
+Two implementations:
+
+- **OpenMeteoProvider** - Real weather data from Open-Meteo API
+- **DemoProvider** - Deterministic data for testing (no network calls)
+
+Provider selection:
+
+```typescript
+const provider = process.env.WEATHER_API_MODE === 'demo' ? demoProvider : openMeteoProvider;
+```
+
+### Zod Schemas
+
+All data validated at runtime:
+
+```typescript
+// Request validation
+WeatherRequestSchema.safeParse({ lat, lon, unit });
+
+// Response validation
+WeatherDataSchema.safeParse(providerResponse);
+```
+
+### Cache Strategy
+
+| Location | Type          | TTL    | Purpose          |
+| -------- | ------------- | ------ | ---------------- |
+| Server   | In-memory Map | 5 min  | Reduce API calls |
+| Client   | localStorage  | 10 min | Offline support  |
+
+## Demo Mode
+
+Demo mode provides stable, deterministic data for testing and demos.
+
+### Activation
+
+```bash
+WEATHER_API_MODE=demo
+```
+
+### Supported Cities
+
+| City     | Coordinates    | Weather Code      |
+| -------- | -------------- | ----------------- |
+| London   | 51.51, -0.13   | 3 (Overcast)      |
+| New York | 40.71, -74.01  | 1 (Mainly clear)  |
+| Tokyo    | 35.68, 139.65  | 2 (Partly cloudy) |
+| Paris    | 48.86, 2.35    | 61 (Slight rain)  |
+| Sydney   | -33.87, 151.21 | 0 (Clear sky)     |
+
+Unknown coordinates return default data (weather code 1, temp 20°C).
+
+### Why Demo Mode?
+
+1. **Testing** - Deterministic data makes tests reliable
+2. **Offline Development** - No network needed
+3. **CI/CD** - Build without external dependencies
+4. **Demos** - Consistent screenshots and presentations
 
 ## Directory Structure
 
 ```
 weather-app/
 ├── src/
-│   ├── app/                        # Next.js App Router
-│   │   ├── layout.tsx              # Root layout (navigation, metadata)
-│   │   ├── page.tsx                # Dashboard page
-│   │   ├── settings/
-│   │   │   └── page.tsx            # Settings page
-│   │   └── globals.css             # Global styles
-│   │
+│   ├── app/
+│   │   ├── api/weather/route.ts    # Server API
+│   │   ├── layout.tsx              # Root layout
+│   │   ├── page.tsx                # Dashboard (client)
+│   │   └── settings/page.tsx       # Settings (client)
 │   ├── components/
-│   │   ├── layout/                 # Layout components
-│   │   │   └── navigation.tsx      # App navigation bar
 │   │   ├── ui/                     # Generic UI components
 │   │   │   ├── button.tsx
 │   │   │   ├── card.tsx
 │   │   │   └── input.tsx
-│   │   └── weather/                # Weather-specific components
+│   │   └── weather/                # Domain components
 │   │       ├── current-weather-card.tsx
 │   │       ├── hourly-forecast.tsx
 │   │       ├── daily-forecast.tsx
-│   │       ├── location-search.tsx
-│   │       └── saved-locations.tsx
-│   │
-│   ├── hooks/                      # Custom React hooks
-│   │   └── use-local-storage.ts    # localStorage hook with SSR safety
-│   │
-│   ├── lib/                        # Utility libraries
-│   │   ├── demo-data.ts            # Demo location seeding
-│   │   ├── format.ts               # Data formatting utilities
-│   │   ├── storage.ts              # localStorage utilities
-│   │   └── weather-codes.ts        # Weather code mappings
-│   │
-│   ├── services/                   # API services
-│   │   ├── geocoding.ts            # Location search API
-│   │   └── weather.ts              # Weather data API
-│   │
-│   └── types/                      # TypeScript definitions
-│       └── weather.ts              # Weather data types
-│
+│   │       └── location-search.tsx
+│   ├── lib/
+│   │   └── weather/
+│   │       ├── schemas.ts          # Zod schemas
+│   │       ├── provider.ts         # Provider interface
+│   │       ├── cache.ts            # Server cache
+│   │       ├── rate-limit.ts       # Rate limiter
+│   │       └── providers/
+│   │           ├── open-meteo.ts   # Real provider
+│   │           └── demo.ts         # Demo provider
+│   ├── services/
+│   │   ├── weather.ts              # Client weather API
+│   │   └── geocoding.ts            # Location search
+│   └── types/
+│       └── weather.ts              # TypeScript types
+├── e2e/                            # Playwright E2E tests
 ├── docs/                           # Documentation
-│   └── ARCHITECTURE.md             # This file
-│
-└── public/                         # Static assets
+└── .github/workflows/              # CI/CD
 ```
-
-## Key Design Decisions
-
-### 1. Client-Side Rendering for Dashboard
-
-**Decision**: Use `'use client'` directive for main pages
-
-**Rationale**:
-- Weather data is user-specific and dynamic
-- localStorage access requires client-side code
-- Better UX with instant updates
-- No SEO requirements for authenticated pages
-
-### 2. localStorage for Data Persistence
-
-**Decision**: Use browser localStorage instead of a database
-
-**Rationale**:
-- No backend infrastructure needed
-- Privacy-first approach (no server-side data)
-- Fast access and updates
-- Suitable for demo application
-- Offline-capable
-
-**Limitations**:
-- Data not synced across devices
-- 5-10MB storage limit per domain
-- Cleared when user clears browser data
-
-### 3. 10-Minute Cache Duration
-
-**Decision**: Cache weather data for 10 minutes
-
-**Rationale**:
-- Balance between freshness and API usage
-- Weather doesn't change significantly in 10 minutes
-- Reduces unnecessary API calls
-- Improves perceived performance
-
-### 4. No Authentication
-
-**Decision**: No user authentication system
-
-**Rationale**:
-- Simplifies deployment
-- Reduces complexity
-- Privacy-focused (no user data collection)
-- Suitable for demo/personal use
-
-## Data Models
-
-### Location
-
-```typescript
-interface Location {
-  id: string;              // Unique identifier (lat,lon)
-  name: string;            // City name
-  lat: number;             // Latitude
-  lon: number;             // Longitude
-  country: string;         // Country name
-  admin1?: string;         // State/region
-}
-```
-
-### Weather Data
-
-```typescript
-interface WeatherData {
-  current: CurrentWeather;   // Current conditions
-  hourly: HourlyForecast;    // 24h forecast
-  daily: DailyForecast;      // 7-day forecast
-}
-```
-
-### Cache Structure
-
-```typescript
-interface CacheEntry {
-  data: WeatherData;
-  timestamp: number;         // Unix timestamp
-}
-```
-
-## API Integration
-
-### Open-Meteo Geocoding API
-
-**Endpoint**: `https://geocoding-api.open-meteo.com/v1/search`
-
-**Request**:
-```
-GET /v1/search?name={city}&count=5&language=en&format=json
-```
-
-**Response**:
-```json
-{
-  "results": [
-    {
-      "id": 2643743,
-      "name": "London",
-      "latitude": 51.5074,
-      "longitude": -0.1278,
-      "country": "United Kingdom",
-      "admin1": "England"
-    }
-  ]
-}
-```
-
-### Open-Meteo Forecast API
-
-**Endpoint**: `https://api.open-meteo.com/v1/forecast`
-
-**Request Parameters**:
-- `latitude`, `longitude`: Location coordinates
-- `current`: Current weather metrics
-- `hourly`: Hourly forecast metrics
-- `daily`: Daily forecast metrics
-- `temperature_unit`: celsius or fahrenheit
-- `timezone`: auto (uses location timezone)
-
-**Response**: Complex JSON with time-series data
-
-## Performance Optimizations
-
-### 1. Code Splitting
-
-- Automatic route-based code splitting via Next.js
-- Dynamic imports for large components
-- Tree-shaking for unused code
-
-### 2. Caching Strategy
-
-```
-Request → Check localStorage cache
-           ↓
-        Valid?
-       ↙     ↘
-     Yes      No
-      ↓        ↓
-   Return   Fetch from API
-   Cache       ↓
-            Update Cache
-               ↓
-            Return Data
-```
-
-### 3. Debounced Search
-
-Location search input is debounced (300ms) to reduce unnecessary API calls:
-
-```typescript
-useEffect(() => {
-  const timeout = setTimeout(() => {
-    searchLocations(query);
-  }, 300);
-  return () => clearTimeout(timeout);
-}, [query]);
-```
-
-### 4. Optimistic UI Updates
-
-- Immediate UI feedback on user actions
-- Show loading states during API calls
-- Graceful error handling
 
 ## Error Handling
 
-### Network Errors
+### Error Codes
 
-- Try-catch blocks around all API calls
-- User-friendly error messages
-- Maintain cached data on failure
+| Code              | HTTP Status | Description        |
+| ----------------- | ----------- | ------------------ |
+| `INVALID_REQUEST` | 400         | Invalid parameters |
+| `RATE_LIMITED`    | 429         | Too many requests  |
+| `TIMEOUT`         | 504         | Provider timeout   |
+| `PROVIDER_ERROR`  | 502         | Provider failure   |
 
-### Data Validation
+### Error Response Format
 
-- TypeScript for compile-time type safety
-- Runtime validation for API responses
-- Default values for missing data
-
-## Accessibility
-
-- Semantic HTML elements
-- ARIA labels for icon buttons
-- Keyboard navigation support
-- Focus management for modals/dropdowns
-- Color contrast compliance
-
-## Future Enhancements
-
-### Potential Improvements
-
-1. **Weather Alerts**: Add severe weather notifications
-2. **Geolocation**: Auto-detect user location
-3. **Charts**: Interactive temperature/precipitation charts
-4. **PWA**: Add service worker for offline support
-5. **Backend**: Optional backend for cross-device sync
-6. **Weather Maps**: Integrate radar/satellite imagery
-7. **Historical Data**: Show weather trends
-8. **Multiple Languages**: i18n support
-
-### Scalability Considerations
-
-If scaling to support many users:
-
-1. Add backend API with rate limiting
-2. Implement user authentication
-3. Use database for location storage
-4. Add CDN for static assets
-5. Implement server-side caching
-6. Add analytics and monitoring
-
-## Testing Strategy
-
-### Recommended Tests
-
-1. **Unit Tests**
-   - Utility functions (format, weather codes)
-   - Custom hooks
-   - Service layer functions
-
-2. **Integration Tests**
-   - Component interactions
-   - Data flow
-   - API integration
-
-3. **E2E Tests**
-   - Critical user journeys
-   - Location search and save
-   - Settings persistence
-
-### Testing Tools
-
-- **Jest**: Unit testing
-- **React Testing Library**: Component testing
-- **Playwright**: E2E testing
-
-## Deployment
-
-### Vercel Deployment
-
-The application is optimized for Vercel:
-
-1. **Automatic Builds**: Push to main branch triggers deployment
-2. **Preview Deployments**: PRs get preview URLs
-3. **Edge Network**: Fast global CDN
-4. **Zero Config**: Works out of the box
-
-### Build Process
-
-```bash
-npm run build
+```json
+{
+  "success": false,
+  "error": {
+    "error": "Too many requests",
+    "code": "RATE_LIMITED",
+    "details": "Rate limit exceeded. Try again in 45 seconds."
+  }
+}
 ```
-
-Output:
-- Static HTML/CSS/JS files
-- Optimized images
-- Minified bundles
-- Source maps for debugging
 
 ## Security Considerations
 
-### Current Security Measures
+1. **No API Keys Exposed** - Server-side provider calls
+2. **Rate Limiting** - IP-based abuse protection
+3. **Input Validation** - Zod schemas reject malformed requests
+4. **No User Data Collection** - Privacy-first, localStorage only
+5. **HTTPS Only** - All external API calls over HTTPS
 
-1. **No API Keys**: Public API with no authentication
-2. **No User Data**: Everything stored locally
-3. **HTTPS Only**: All API calls over HTTPS
-4. **Input Sanitization**: Prevent XSS in search inputs
-5. **CSP Headers**: Content Security Policy via Next.js
+## Performance
 
-### Potential Vulnerabilities
+| Optimization     | Implementation                           |
+| ---------------- | ---------------------------------------- |
+| Server caching   | 5-min TTL reduces provider calls by ~90% |
+| Client caching   | 10-min localStorage cache                |
+| Debounced search | 300ms delay prevents excessive API calls |
+| Code splitting   | Next.js automatic route-based splitting  |
 
-1. **XSS**: Mitigated by React's auto-escaping
-2. **CSRF**: Not applicable (no server-side state)
-3. **localStorage Attacks**: Limited to same-origin
+## Testing Strategy
 
-## Monitoring and Analytics
+### Unit Tests (Vitest)
 
-### Current Approach
+- Zod schema validation
+- Provider implementations
+- Cache behavior (TTL, eviction)
 
-- No analytics tracking (privacy-first)
-- No error tracking service
-- No performance monitoring
+### E2E Tests (Playwright)
 
-### Production Recommendations
+- Page loads correctly
+- Search and select location
+- Temperature unit toggle
+- Error states display
+- API route responses
 
-1. **Error Tracking**: Sentry for error monitoring
-2. **Analytics**: Privacy-friendly analytics (Plausible/Fathom)
-3. **Performance**: Web Vitals tracking
-4. **Logging**: Structured logging for debugging
+Run tests:
 
-## Conclusion
+```bash
+npm test           # Unit tests
+npm run test:e2e   # E2E tests
+```
 
-This architecture provides a solid foundation for a weather dashboard with room for growth. The modular structure allows for easy maintenance and feature additions while keeping the codebase clean and performant.
+## Deployment
+
+### Vercel (Recommended)
+
+1. Connect GitHub repository
+2. Auto-detected as Next.js
+3. No environment variables required
+4. Deploy
+
+### Self-hosted
+
+```bash
+npm ci
+npm run build
+npm start
+```
+
+Requires Node.js 20+.
+
+## Future Improvements
+
+1. **Redis Cache** - Replace in-memory cache for multi-instance deployments
+2. **Weather Alerts** - Push notifications for severe weather
+3. **Geolocation** - Auto-detect user location
+4. **PWA** - Service worker for offline support
+5. **Multiple Providers** - Fallback between weather APIs
