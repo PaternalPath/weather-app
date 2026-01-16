@@ -61,7 +61,7 @@ export function LocationSearch({ onLocationSelect }: LocationSearchProps) {
   return (
     <div ref={searchRef} className="relative">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
+        <Search className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-zinc-400" />
         <Input
           type="text"
           placeholder="Search for a city..."
@@ -73,19 +73,17 @@ export function LocationSearch({ onLocationSelect }: LocationSearchProps) {
       </div>
 
       {showResults && results.length > 0 && (
-        <div className="absolute top-full mt-2 w-full bg-white dark:bg-zinc-900 rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-800 z-50 max-h-64 overflow-y-auto">
+        <div className="absolute top-full z-50 mt-2 max-h-64 w-full overflow-y-auto rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
           {results.map((location) => (
             <button
               key={location.id}
               onClick={() => handleSelect(location)}
-              className="w-full px-4 py-3 text-left hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-3 transition-colors border-b border-zinc-100 dark:border-zinc-800 last:border-0"
+              className="flex w-full items-center gap-3 border-b border-zinc-100 px-4 py-3 text-left transition-colors last:border-0 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-800"
             >
-              <MapPin className="w-4 h-4 text-zinc-400 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-zinc-900 dark:text-zinc-100">
-                  {location.name}
-                </div>
-                <div className="text-sm text-zinc-500 dark:text-zinc-400 truncate">
+              <MapPin className="h-4 w-4 flex-shrink-0 text-zinc-400" />
+              <div className="min-w-0 flex-1">
+                <div className="font-medium text-zinc-900 dark:text-zinc-100">{location.name}</div>
+                <div className="truncate text-sm text-zinc-500 dark:text-zinc-400">
                   {[location.admin1, location.country].filter(Boolean).join(', ')}
                 </div>
               </div>
@@ -95,7 +93,7 @@ export function LocationSearch({ onLocationSelect }: LocationSearchProps) {
       )}
 
       {isSearching && (
-        <div className="absolute top-full mt-2 w-full bg-white dark:bg-zinc-900 rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-800 z-50 px-4 py-3 text-center text-sm text-zinc-500">
+        <div className="absolute top-full z-50 mt-2 w-full rounded-lg border border-zinc-200 bg-white px-4 py-3 text-center text-sm text-zinc-500 shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
           Searching...
         </div>
       )}

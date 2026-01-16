@@ -45,12 +45,7 @@ export async function fetchWeather(
       'apparent_temperature',
       'precipitation',
     ].join(','),
-    hourly: [
-      'temperature_2m',
-      'weather_code',
-      'precipitation',
-      'relative_humidity_2m',
-    ].join(','),
+    hourly: ['temperature_2m', 'weather_code', 'precipitation', 'relative_humidity_2m'].join(','),
     daily: [
       'weather_code',
       'temperature_2m_max',
@@ -65,9 +60,7 @@ export async function fetchWeather(
     forecast_days: '7',
   });
 
-  const response = await fetch(
-    `https://api.open-meteo.com/v1/forecast?${params}`
-  );
+  const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
 
   if (!response.ok) {
     throw new Error('Failed to fetch weather data');

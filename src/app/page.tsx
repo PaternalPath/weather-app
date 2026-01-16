@@ -21,7 +21,11 @@ import { SavedLocations } from '@/components/weather/saved-locations';
 import { CurrentWeatherCard } from '@/components/weather/current-weather-card';
 import { HourlyForecastCard } from '@/components/weather/hourly-forecast';
 import { DailyForecastCard } from '@/components/weather/daily-forecast';
-import { SkeletonCurrentWeather, SkeletonHourlyForecast, SkeletonCard } from '@/components/ui/skeleton';
+import {
+  SkeletonCurrentWeather,
+  SkeletonHourlyForecast,
+  SkeletonCard,
+} from '@/components/ui/skeleton';
 import { ErrorState, EmptyState } from '@/components/ui/error-state';
 import { CloudSun } from 'lucide-react';
 
@@ -134,15 +138,15 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-zinc-50 via-zinc-50 to-blue-50 dark:from-black dark:via-zinc-950 dark:to-blue-950">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         {/* Dashboard Header */}
         <DashboardHeader unit={settings.temperatureUnit} onUnitChange={handleUnitChange} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="space-y-6 lg:col-span-1">
             <div>
-              <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-3">
+              <h2 className="mb-3 text-base font-semibold text-zinc-900 dark:text-zinc-100">
                 Search Location
               </h2>
               <LocationSearch onLocationSelect={handleLocationSelect} />
@@ -159,7 +163,7 @@ export default function Home() {
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-6 lg:col-span-2">
             {/* Loading State */}
             {isLoading && (
               <>
@@ -187,15 +191,9 @@ export default function Home() {
                   unit={settings.temperatureUnit}
                 />
 
-                <HourlyForecastCard
-                  forecast={weatherData.hourly}
-                  unit={settings.temperatureUnit}
-                />
+                <HourlyForecastCard forecast={weatherData.hourly} unit={settings.temperatureUnit} />
 
-                <DailyForecastCard
-                  forecast={weatherData.daily}
-                  unit={settings.temperatureUnit}
-                />
+                <DailyForecastCard forecast={weatherData.daily} unit={settings.temperatureUnit} />
               </>
             )}
 
@@ -204,7 +202,7 @@ export default function Home() {
               <EmptyState
                 title="Welcome to Weather Dashboard"
                 description="Search for a city above to get started with real-time weather forecasts and conditions."
-                icon={<CloudSun className="w-full h-full" />}
+                icon={<CloudSun className="h-full w-full" />}
               />
             )}
 
@@ -212,7 +210,7 @@ export default function Home() {
               <EmptyState
                 title="Select a location"
                 description="Choose one of your saved locations or search for a new city to view weather data."
-                icon={<CloudSun className="w-full h-full" />}
+                icon={<CloudSun className="h-full w-full" />}
               />
             )}
           </div>

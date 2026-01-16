@@ -9,6 +9,7 @@ A modern, responsive weather dashboard built with Next.js 16, TypeScript, and Ta
 ## Features
 
 ### Weather Data
+
 - **Live Weather Data**: Current conditions, hourly forecasts (24h), and 7-day forecasts
 - **Location Search**: Search and save multiple cities worldwide using geocoding
 - **Smart Caching**: 10-minute localStorage cache to reduce API calls and improve performance
@@ -16,6 +17,7 @@ A modern, responsive weather dashboard built with Next.js 16, TypeScript, and Ta
 - **Privacy First**: No API keys required, all data stored locally
 
 ### UI/UX
+
 - **Modern Design**: Beautiful gradient cards with glassmorphism effects
 - **Temperature Toggle**: Quick switch between Celsius and Fahrenheit in dashboard header
 - **Responsive Layout**: Mobile-first design, works perfectly on 375px+ screens
@@ -146,18 +148,21 @@ weather-app/
 The dashboard includes a comprehensive set of reusable UI components:
 
 ### Base Components
+
 - **Card**: Elevated cards with hover effects and rounded corners
 - **Button**: Multiple variants (primary, secondary, danger, ghost) with proper focus states
 - **Input**: Form inputs with error states and accessibility features
 - **Toggle**: Segmented control for switching between options (used for temperature units)
 
 ### Specialized Components
+
 - **Skeleton**: Loading placeholders for weather cards and lists
 - **Stat**: Metric display with icon, label, and value
 - **ErrorState**: User-friendly error messages with retry functionality
 - **EmptyState**: Helpful guidance when no data is available
 
 ### Weather Components
+
 - **DashboardHeader**: Page header with temperature unit toggle
 - **CurrentWeatherCard**: Hero card showing current conditions with gradient background
 - **HourlyForecastCard**: Horizontal scrolling 24-hour forecast with fade edges
@@ -166,6 +171,7 @@ The dashboard includes a comprehensive set of reusable UI components:
 - **SavedLocations**: Manage and switch between saved cities
 
 All components are:
+
 - ✅ Fully typed with TypeScript
 - ✅ Accessible (ARIA labels, keyboard navigation)
 - ✅ Responsive (mobile-first design)

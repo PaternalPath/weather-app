@@ -25,9 +25,7 @@ export async function searchLocations(query: string): Promise<Location[]> {
     format: 'json',
   });
 
-  const response = await fetch(
-    `https://geocoding-api.open-meteo.com/v1/search?${params}`
-  );
+  const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?${params}`);
 
   if (!response.ok) {
     throw new Error('Failed to search locations');

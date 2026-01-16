@@ -80,16 +80,19 @@ Re-render Components
 The application uses a hybrid state management approach:
 
 #### Local State (useState)
+
 - Component-specific UI state
 - Form inputs
 - Modal visibility
 
 #### localStorage State (useLocalStorage hook)
+
 - Saved locations
 - User settings
 - Weather data cache
 
 #### Advantages
+
 - No external state management library needed
 - Persistent across browser sessions
 - Simple and performant
@@ -149,6 +152,7 @@ weather-app/
 **Decision**: Use `'use client'` directive for main pages
 
 **Rationale**:
+
 - Weather data is user-specific and dynamic
 - localStorage access requires client-side code
 - Better UX with instant updates
@@ -159,6 +163,7 @@ weather-app/
 **Decision**: Use browser localStorage instead of a database
 
 **Rationale**:
+
 - No backend infrastructure needed
 - Privacy-first approach (no server-side data)
 - Fast access and updates
@@ -166,6 +171,7 @@ weather-app/
 - Offline-capable
 
 **Limitations**:
+
 - Data not synced across devices
 - 5-10MB storage limit per domain
 - Cleared when user clears browser data
@@ -175,6 +181,7 @@ weather-app/
 **Decision**: Cache weather data for 10 minutes
 
 **Rationale**:
+
 - Balance between freshness and API usage
 - Weather doesn't change significantly in 10 minutes
 - Reduces unnecessary API calls
@@ -185,6 +192,7 @@ weather-app/
 **Decision**: No user authentication system
 
 **Rationale**:
+
 - Simplifies deployment
 - Reduces complexity
 - Privacy-focused (no user data collection)
@@ -196,12 +204,12 @@ weather-app/
 
 ```typescript
 interface Location {
-  id: string;              // Unique identifier (lat,lon)
-  name: string;            // City name
-  lat: number;             // Latitude
-  lon: number;             // Longitude
-  country: string;         // Country name
-  admin1?: string;         // State/region
+  id: string; // Unique identifier (lat,lon)
+  name: string; // City name
+  lat: number; // Latitude
+  lon: number; // Longitude
+  country: string; // Country name
+  admin1?: string; // State/region
 }
 ```
 
@@ -209,9 +217,9 @@ interface Location {
 
 ```typescript
 interface WeatherData {
-  current: CurrentWeather;   // Current conditions
-  hourly: HourlyForecast;    // 24h forecast
-  daily: DailyForecast;      // 7-day forecast
+  current: CurrentWeather; // Current conditions
+  hourly: HourlyForecast; // 24h forecast
+  daily: DailyForecast; // 7-day forecast
 }
 ```
 
@@ -220,7 +228,7 @@ interface WeatherData {
 ```typescript
 interface CacheEntry {
   data: WeatherData;
-  timestamp: number;         // Unix timestamp
+  timestamp: number; // Unix timestamp
 }
 ```
 
@@ -231,11 +239,13 @@ interface CacheEntry {
 **Endpoint**: `https://geocoding-api.open-meteo.com/v1/search`
 
 **Request**:
+
 ```
 GET /v1/search?name={city}&count=5&language=en&format=json
 ```
 
 **Response**:
+
 ```json
 {
   "results": [
@@ -256,6 +266,7 @@ GET /v1/search?name={city}&count=5&language=en&format=json
 **Endpoint**: `https://api.open-meteo.com/v1/forecast`
 
 **Request Parameters**:
+
 - `latitude`, `longitude`: Location coordinates
 - `current`: Current weather metrics
 - `hourly`: Hourly forecast metrics
@@ -397,6 +408,7 @@ npm run build
 ```
 
 Output:
+
 - Static HTML/CSS/JS files
 - Optimized images
 - Minified bundles

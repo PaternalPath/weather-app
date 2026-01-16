@@ -16,15 +16,18 @@ export function ErrorState({
 }: ErrorStateProps) {
   return (
     <div
-      className={`bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-6 ${className}`}
+      className={`rounded-lg border border-red-200 bg-red-50 p-6 dark:border-red-800 dark:bg-red-950/30 ${className}`}
       role="alert"
       aria-live="polite"
     >
       <div className="flex items-start gap-3">
-        <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-red-900 dark:text-red-100 mb-1">{title}</h3>
-          <p className="text-sm text-red-800 dark:text-red-200 mb-4">{message}</p>
+        <AlertTriangle
+          className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600 dark:text-red-400"
+          aria-hidden="true"
+        />
+        <div className="min-w-0 flex-1">
+          <h3 className="mb-1 font-semibold text-red-900 dark:text-red-100">{title}</h3>
+          <p className="mb-4 text-sm text-red-800 dark:text-red-200">{message}</p>
           {onRetry && (
             <Button
               onClick={onRetry}
@@ -32,7 +35,7 @@ export function ErrorState({
               variant="secondary"
               className="inline-flex items-center gap-2"
             >
-              <RefreshCw className="w-4 h-4" aria-hidden="true" />
+              <RefreshCw className="h-4 w-4" aria-hidden="true" />
               Try Again
             </Button>
           )}
@@ -50,22 +53,16 @@ interface EmptyStateProps {
   className?: string;
 }
 
-export function EmptyState({
-  title,
-  description,
-  icon,
-  action,
-  className = '',
-}: EmptyStateProps) {
+export function EmptyState({ title, description, icon, action, className = '' }: EmptyStateProps) {
   return (
-    <div className={`text-center py-12 px-4 ${className}`}>
+    <div className={`px-4 py-12 text-center ${className}`}>
       {icon && (
-        <div className="mx-auto w-16 h-16 mb-4 flex items-center justify-center text-zinc-400 dark:text-zinc-600">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center text-zinc-400 dark:text-zinc-600">
           {icon}
         </div>
       )}
-      <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-2">{title}</h3>
-      <p className="text-zinc-600 dark:text-zinc-400 mb-6 max-w-md mx-auto">{description}</p>
+      <h3 className="mb-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">{title}</h3>
+      <p className="mx-auto mb-6 max-w-md text-zinc-600 dark:text-zinc-400">{description}</p>
       {action && <div>{action}</div>}
     </div>
   );

@@ -1,9 +1,6 @@
 import { TemperatureUnit } from '@/types/weather';
 
-export function formatTemperature(
-  temp: number,
-  unit: TemperatureUnit
-): string {
+export function formatTemperature(temp: number, unit: TemperatureUnit): string {
   return `${Math.round(temp)}°${unit === 'celsius' ? 'C' : 'F'}`;
 }
 
