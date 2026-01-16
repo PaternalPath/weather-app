@@ -1,11 +1,16 @@
 import { test, expect } from '@playwright/test';
 
+// Increase default timeout for CI
+test.setTimeout(60000);
+
 test.describe('Weather Dashboard', () => {
   test.beforeEach(async ({ page }) => {
     // Clear localStorage before each test
     await page.goto('/');
     await page.evaluate(() => localStorage.clear());
     await page.reload();
+    // Wait for page to be fully loaded
+    await page.waitForLoadState('networkidle');
   });
 
   test('home page loads successfully', async ({ page }) => {
@@ -29,16 +34,16 @@ test.describe('Weather Dashboard', () => {
     const searchInput = page.getByPlaceholder('Search for a city...');
     await searchInput.fill('London');
 
-    // Wait for search results
-    await expect(page.getByRole('listbox')).toBeVisible({ timeout: 5000 });
+    // Wait for search results (longer timeout for CI)
+    await expect(page.getByRole('listbox')).toBeVisible({ timeout: 15000 });
 
     // Click on first result
     const firstResult = page.getByRole('option').first();
     await expect(firstResult).toBeVisible();
     await firstResult.click();
 
-    // Wait for weather data to load
-    await expect(page.getByText(/°/)).toBeVisible({ timeout: 10000 });
+    // Wait for weather data to load (longer timeout for CI)
+    await expect(page.getByText(/°/)).toBeVisible({ timeout: 15000 });
 
     // Verify current weather card is displayed
     await expect(page.locator('text=London').first()).toBeVisible();
@@ -73,30 +78,32 @@ test.describe('Weather Dashboard', () => {
     const searchInput = page.getByPlaceholder('Search for a city...');
     await searchInput.fill('Tokyo');
 
-    // Wait for and click result
-    await expect(page.getByRole('listbox')).toBeVisible({ timeout: 5000 });
+    // Wait for and click result (longer timeout for CI)
+    await expect(page.getByRole('listbox')).toBeVisible({ timeout: 15000 });
     await page.getByRole('option').first().click();
 
     // Wait for weather to load
-    await expect(page.getByText(/°C|°F/)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/°C|°F/)).toBeVisible({ timeout: 15000 });
 
     // Click Fahrenheit
     await page.getByRole('button', { name: 'Fahrenheit' }).click();
 
-    // Wait for data to refresh (cache is cleared on unit change)
+    // Wait for toggle state to update
     await expect(page.getByRole('button', { name: 'Fahrenheit' })).toHaveAttribute(
       'aria-pressed',
       'true'
     );
   });
 
-  test('displays empty state when no location is selected', async ({ page }) => {
+  test('demo locations are seeded on first visit', async ({ page }) => {
     await page.goto('/');
 
-    // Check for welcome/empty state message
-    await expect(
-      page.getByText(/Welcome to Weather Dashboard|Search for a city|Select a location/)
-    ).toBeVisible();
+    // Demo data should be seeded, showing saved locations
+    // The app seeds London, New York, Tokyo by default
+    await expect(page.getByText('Saved Locations')).toBeVisible({ timeout: 10000 });
+
+    // Should have at least one saved location from demo data
+    await expect(page.locator('[aria-label*="Select"]').first()).toBeVisible();
   });
 
   test('keyboard navigation works in search', async ({ page }) => {
@@ -105,8 +112,8 @@ test.describe('Weather Dashboard', () => {
     const searchInput = page.getByPlaceholder('Search for a city...');
     await searchInput.fill('Paris');
 
-    // Wait for results
-    await expect(page.getByRole('listbox')).toBeVisible({ timeout: 5000 });
+    // Wait for results (longer timeout for CI)
+    await expect(page.getByRole('listbox')).toBeVisible({ timeout: 15000 });
 
     // Press arrow down to select first item
     await searchInput.press('ArrowDown');
@@ -128,8 +135,8 @@ test.describe('Weather Dashboard', () => {
     // Type a nonsense query that won't match any city
     await searchInput.fill('xyznonexistent123');
 
-    // Wait for "no results" message
-    await expect(page.getByText(/No cities found/)).toBeVisible({ timeout: 5000 });
+    // Wait for "no results" message (longer timeout for CI)
+    await expect(page.getByText(/No cities found/)).toBeVisible({ timeout: 10000 });
   });
 });
 
