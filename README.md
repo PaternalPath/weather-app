@@ -33,6 +33,18 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) to view the dashboard.
 
+## Zero-secret quickstart (demo mode)
+
+Run the app without any API keys using deterministic demo data:
+
+```bash
+npm ci
+cp .env.example .env.local
+npm run dev
+```
+
+**Demo behavior:** With `WEATHER_API_MODE=demo`, the app serves stable weather data for London, New York, Tokyo, Paris, and Sydney. To switch to live Open-Meteo data, remove `WEATHER_API_MODE` (or set it to any value other than `demo`).
+
 ## Scripts
 
 | Script              | Description                  |
@@ -161,6 +173,25 @@ npm run lint        # ✓ No errors
 npm run typecheck   # ✓ No errors
 npm test            # ✓ 32 tests pass
 npm run build       # ✓ Build succeeds
+```
+
+## How to verify
+
+Run the demo quickstart:
+
+```bash
+npm ci
+cp .env.example .env.local
+npm run dev
+```
+
+Run the verification commands:
+
+```bash
+npm run lint
+npm run typecheck
+npm test
+npm run build
 ```
 
 ## Technology Stack
