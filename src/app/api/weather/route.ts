@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 import {
   WeatherRequestSchema,
   type WeatherResponse,
@@ -9,6 +10,7 @@ import { demoProvider } from '@/lib/weather/providers/demo';
 import { WeatherProviderError } from '@/lib/weather/provider';
 import { getCacheKey, getFromCache, setInCache } from '@/lib/weather/cache';
 import { checkRateLimit } from '@/lib/weather/rate-limit';
+import { logger } from '@/lib/logger';
 
 // Check if demo mode is enabled
 // Demo mode is used when WEATHER_API_MODE=demo or when no specific mode is set
@@ -136,8 +138,12 @@ export async function GET(request: NextRequest): Promise<NextResponse<WeatherRes
       );
     }
 
-    // Unexpected error
-    console.error('Unexpected error in weather API:', error);
+    // Unexpected error - log and report to Sentry
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error('Unexpected error in weather API', err, { lat, lon, unit, clientIP });
+    Sentry.captureException(err, {
+      extra: { lat, lon, unit, clientIP },
+    });
 
     return createErrorResponse(
       {
