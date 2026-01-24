@@ -2,8 +2,7 @@
 
 A modern, production-ready weather dashboard built with Next.js 16, TypeScript, and Tailwind CSS.
 
-<!-- TODO: Add screenshot/GIF here when available -->
-<!-- ![Weather Dashboard Screenshot](./docs/screenshot.png) -->
+![Weather Dashboard Screenshot](./docs/screenshot.svg)
 
 [![CI](https://github.com/YOUR_USERNAME/weather-app/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/weather-app/actions/workflows/ci.yml)
 ![Next.js](https://img.shields.io/badge/Next.js-16.1.1-black?style=flat-square&logo=next.js)
